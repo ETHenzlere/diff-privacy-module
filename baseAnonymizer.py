@@ -110,7 +110,7 @@ def populateAnonFromDF(curs, df, table, timestampIndexes):
                 li[j] = java.sql.Timestamp @ li[j]
             tuples[i] = tuple(li)
 
-    colSlots = "({0})".format(",".join("?" for _ in df.columns))
+    colSlots = f"({','.join('?' for _ in df.columns)})"
     insertSQL = f"insert into {table} values {colSlots}"
     curs.executemany(insertSQL, tuples)
 
