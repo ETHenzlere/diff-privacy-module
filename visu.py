@@ -1,3 +1,6 @@
+"""A helper module that generates different JSON files and images
+from an original and anonymized DataFrame
+"""
 import json
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -14,7 +17,7 @@ def compareNumericalCols(dataset, synthFrame, continuous):
     if numPlots < 1:
         print("No numerical columns found!")
     else:
-        for idx, col in enumerate(continuous):
+        for _, col in enumerate(continuous):
             pltO = sns.kdeplot(data=dataset[col])
             pltA = sns.kdeplot(data=synthFrame[col])
 
@@ -31,7 +34,7 @@ def compareNumericalCols(dataset, synthFrame, continuous):
             jsonDict.append(jsonObj)
             plt.clf()
 
-    with open("output/kdeInfo.json", "w") as outfile:
+    with open("output/kdeInfo.json", "w", encoding="utf-8") as outfile:
         json.dump(jsonDict, outfile)
 
     boxNumerical(dataset, synthFrame, continuous)
@@ -58,7 +61,7 @@ def boxNumerical(dataset, synthFrame, continuous):
                 )
             jsonObj = {"column": column, "data": celltext}
             jsonDict.append(jsonObj)
-    with open("output/numInfo.json", "w") as outfile:
+    with open("output/numInfo.json", "w", encoding="utf-8") as outfile:
         json.dump(jsonDict, outfile)
 
 
@@ -81,7 +84,7 @@ def compareCategorical(dataset, synthFrame, categorical):
             "anonymized": list(combined["anonymized"]),
         }
         jsonDict.append(jsonObj)
-    with open("output/catInfo.json", "w") as outfile:
+    with open("output/catInfo.json", "w", encoding="utf-8") as outfile:
         json.dump(jsonDict, outfile)
 
 
