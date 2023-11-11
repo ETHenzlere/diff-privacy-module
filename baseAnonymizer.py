@@ -37,7 +37,7 @@ def storageLocation(path):
     Returns:
         string: The storage folder
     """
-    temp = re.split("^(.+)\/([^\/]+)$", path)
+    temp = re.split(r"^(.+)/([^/]+)$", path)
     baseLoc = ""
     if len(temp) > 1:
         baseLoc = temp[1]
@@ -45,16 +45,16 @@ def storageLocation(path):
     return baseLoc
 
 
-def splitString(longString):
+def splitString(colNamesString):
     """Helper function that creates a list from a comma separated string
 
     Args:
-        longString (string): A comma separated string or '-1'
+        colNamesString (string): A comma separated string or '-1'
 
     Returns:
         str[]: A list of strings
     """
-    return [] if longString == "-1" else [i for i in longString.split(",")]
+    return [] if colNamesString == "-1" else list(colNamesString.split(","))
 
 
 def dfFromTable(curs, table):
@@ -116,6 +116,15 @@ def populateAnonFromDF(curs, df, table, timestampIndexes):
 
 
 def getDroppableInfo(dropCols, dataset):
+    """Helper function that saves droppable columns from anonymization
+
+    Args:
+        dropCols (str[]): A list of column names
+        dataset (DataFrame): The dataset
+
+    Returns:
+        DataFrame,int[]: The saved columns as a DataFrame and a list of the original indexes of the columns
+    """
     savedColumns = dataset[dropCols]
     savedColumnsIndexes = []
 
@@ -223,11 +232,9 @@ def anonymizeDB(table, eps, preEps, dropCols, cat, cont, ordi, alg):
 
     # Create empty table called ANON
     anonTableName = table + "_anonymized"
-    try:
-        curs.execute(f"drop table {anonTableName}")
-        print("Dropped old Anonymized table. Creating new table")
-    except:
-        print("No Anonymized table found. Creating new table")
+
+    curs.execute(f"DROP TABLE IF EXISTS {anonTableName}")
+
     createTableQuery = f"CREATE TABLE {anonTableName} AS TABLE {table} WITH NO DATA"
     curs.execute(createTableQuery)
     populateAnonFromDF(curs, datasetAnon, anonTableName, timestampIndexes)
