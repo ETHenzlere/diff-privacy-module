@@ -2,6 +2,7 @@
 """
 import sys
 import re
+import json
 from bs4 import BeautifulSoup
 import jpype
 import jaydebeapi
@@ -9,6 +10,7 @@ import pandas as pd
 from snsynth import Synthesizer
 import numpy as np
 import visu as vs
+import sensitive as post
 
 
 def getTimestampColumns(dbTypeList):
@@ -133,32 +135,17 @@ def getDroppableInfo(dropCols, dataset):
     return savedColumns, savedColumnsIndexes
 
 
-def anonymize(
-    dataset: str,
-    eps: float,
-    preEps: float,
-    dropCols,
-    cat,
-    cont,
-    ordi,
-    alg: str,
-):
-    """Function that handles the anonymization itself and the result visualization
-    Args:
-        dataset (DataFrame): Data
-        eps (float):Epsilon
-        preEps (float): Preprocessor Epsilon
-        dropCols (str[]): Columns that will not take part in anonymization
-        cat (str[]): Categorical columns
-        cont (str[]): Continuous columns
-        ordi (str[]): Ordinal columns
-        alg (str): Algorithm for Anonymization
-
-    Returns:
-        pd.DataFrame: An Anonymized pandas DataFrame
-    """
+def anonymize(dataset: str, anonConfig: dict, sensConfig: dict):
+    dropCols = anonConfig["hide"]
+    alg = anonConfig["alg"]
+    eps = float(anonConfig["eps"])
+    preEps = float(anonConfig["preEps"])
+    cat = anonConfig["cat"]
+    cont = anonConfig["cont"]
+    ordi = anonConfig["ord"]
     savedColumns = []
     savedColumnsIndexes = []
+
     if dropCols:
         savedColumns, savedColumnsIndexes = getDroppableInfo(dropCols, dataset)
         dataset = dataset.drop(dropCols, axis=1)
@@ -188,6 +175,19 @@ def anonymize(
 
     vs.generateVisu(cont, cat, ordi, dataset, synthFrame.copy(deep=True))
 
+    if sensConfig:
+        for sensCol in sensConfig["cols"]:
+            (
+                synthFrame,
+                _,
+            ) = post.fakeColumn(  # second return value is the dict. Use for later
+                synthFrame,
+                sensCol["name"],
+                sensCol["locales"],
+                sensCol["method"],
+                int(sensConfig["seed"]),
+            )
+
     # Stitching the Frame back to its original form
     if dropCols:
         for ind, col in enumerate(dropCols):
@@ -196,19 +196,7 @@ def anonymize(
     return synthFrame
 
 
-def anonymizeDB(table, eps, preEps, dropCols, cat, cont, ordi, alg):
-    """Function that handles the anonymization pipeline for DB Tables.
-
-    Args:
-        table (string): Name of the DB Table
-        eps (float):Epsilon
-        preEps (float): Preprocessor Epsilon
-        dropCols (string[]): Columns that will not take part in anonymization
-        cat (string[]): Categorical columns
-        cont (string[]): Continuous columns
-        ordi (string[]): Ordinal columns
-        alg (string): Algorithm for Anonymization
-    """
+def anonymizeDB(anonConfig: dict, sensConfig: dict):
     with open("config.xml", "r") as f:
         data = f.read()
 
@@ -225,10 +213,10 @@ def anonymizeDB(table, eps, preEps, dropCols, cat, cont, ordi, alg):
     conn = jaydebeapi.connect(driver, url, [username, password])
 
     curs = conn.cursor()
-
+    table = anonConfig["table"]
     dataset, timestampIndexes = dfFromTable(curs, table)
 
-    datasetAnon = anonymize(dataset, eps, preEps, dropCols, cat, cont, ordi, alg)
+    datasetAnon = anonymize(dataset, anonConfig, sensConfig)
 
     # Create empty table called ANON
     anonTableName = table + "_anonymized"
@@ -242,22 +230,12 @@ def anonymizeDB(table, eps, preEps, dropCols, cat, cont, ordi, alg):
     conn.close()
 
 
-def anonymizeCSV(csvPath, eps, preEps, dropCols, cat, cont, ordi, alg):
-    """Function that handles the anonymization pipeline for CSV Files.
+def anonymizeCSV(anonConfig, sensConfig):
+    csvPath = anonConfig["path"]
 
-    Args:
-        csvPath (string): Path to the .csv data
-        eps (float):Epsilon
-        preEps (float): Preprocessor Epsilon
-        dropCols (string[]): Columns that will not take part in anonymization
-        cat (string[]): Categorical columns
-        cont (string[]): Continuous columns
-        ordi (string[]): Ordinal columns
-        alg (string): Algorithm for Anonymization
-    """
     dataset = pd.read_csv(csvPath, index_col=None)
     originalTypes = dataset.dtypes
-    datasetAnon = anonymize(dataset, eps, preEps, dropCols, cat, cont, ordi, alg)
+    datasetAnon = anonymize(dataset, anonConfig, sensConfig)
     datasetAnon = datasetAnon.astype(originalTypes)
 
     baseLoc = storageLocation(csvPath)
@@ -267,54 +245,18 @@ def anonymizeCSV(csvPath, eps, preEps, dropCols, cat, cont, ordi, alg):
 
 def main():
     """Entry method"""
-    if len(sys.argv) < 9:
-        print(
-            "Not enough arguments provided: <tableName> <eps> <preprocessorEps> <dropColumns> <categoricalColumns> <continuousColumns> <ordinalColumns> <algorithm>"
-        )
+    if len(sys.argv) < 4:
+        print("Not enough arguments provided: <csvConfig?> <anonConfig> <sensConfig>")
         return
 
-    workloadDecider = sys.argv[1]
+    csvWorkload = sys.argv[1]
+    anonConfig = json.loads(sys.argv[2])
+    sensConfig = json.loads(sys.argv[3])
 
-    eps = float(sys.argv[2])
-
-    preEps = float(sys.argv[3])
-
-    saveList = sys.argv[4]
-    columnsToSave = splitString(saveList)
-
-    catList = sys.argv[5]
-    categorical = splitString(catList)
-
-    contList = sys.argv[6]
-    continuous = splitString(contList)
-
-    ordList = sys.argv[7]
-    ordinal = splitString(ordList)
-
-    algorithm = sys.argv[8]
-
-    if ".csv" in workloadDecider:
-        anonymizeCSV(
-            workloadDecider,
-            eps,
-            preEps,
-            columnsToSave,
-            categorical,
-            continuous,
-            ordinal,
-            algorithm,
-        )
+    if csvWorkload == "true":
+        anonymizeCSV(anonConfig, sensConfig)
     else:
-        anonymizeDB(
-            workloadDecider,
-            eps,
-            preEps,
-            columnsToSave,
-            categorical,
-            continuous,
-            ordinal,
-            algorithm,
-        )
+        anonymizeDB(anonConfig, sensConfig)
     return
 
 
