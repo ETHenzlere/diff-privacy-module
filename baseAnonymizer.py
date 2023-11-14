@@ -11,6 +11,7 @@ from snsynth import Synthesizer
 import numpy as np
 import visu as vs
 import sensitive as post
+import xmlWriter as xml
 
 
 def getTimestampColumns(dbTypeList):
@@ -177,16 +178,15 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict):
 
     if sensConfig:
         for sensCol in sensConfig["cols"]:
-            (
-                synthFrame,
-                _,
-            ) = post.fakeColumn(  # second return value is the dict. Use for later
+            synthFrame, _ = post.fakeColumn(
                 synthFrame,
                 sensCol["name"],
                 sensCol["locales"],
                 sensCol["method"],
                 int(sensConfig["seed"]),
             )
+
+    xml.parse(anonConfig, sensConfig)
 
     # Stitching the Frame back to its original form
     if dropCols:
@@ -246,7 +246,7 @@ def anonymizeCSV(anonConfig, sensConfig):
 def main():
     """Entry method"""
     if len(sys.argv) < 4:
-        print("Not enough arguments provided: <csvConfig?> <anonConfig> <sensConfig>")
+        print("Not enough arguments provided: <isCSV> <anonConfig> <sensConfig>")
         return
 
     csvWorkload = sys.argv[1]

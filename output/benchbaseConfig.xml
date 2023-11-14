@@ -1,0 +1,17 @@
+<parameters>
+  <anon>
+    <anonTable>
+      <tablename>shopping</tablename>
+      <droppable>customer</droppable>
+      <categorical />
+      <continuous />
+      <ordinal />
+      <eps>1</eps>
+      <preEps>0.5</preEps>
+      <algorithm>dpctgan</algorithm>
+    </anonTable>
+  </anon>
+  <sensitive seed="0">
+    <colName method="suffix" locales="en">gender</colName>
+  </sensitive>
+</parameters>
