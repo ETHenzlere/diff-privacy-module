@@ -35,14 +35,15 @@ def parse(anonConfig: dict, sensConfig: dict):
     algorithm.text = anonConfig["alg"]
 
     ############### Sensitive Config #################
-    sens = ET.SubElement(params, "sensitive")
-    sens.set("seed", str(sensConfig["seed"]))
+    if sensConfig:
+        sens = ET.SubElement(params, "sensitive")
+        sens.set("seed", str(sensConfig["seed"]))
 
-    for sensCol in sensConfig["cols"]:
-        colName = ET.SubElement(sens, "colName")
-        colName.text = sensCol["name"]
-        colName.set("method", sensCol["method"])
-        colName.set("locales", ",".join(sensCol["locales"]))
+        for sensCol in sensConfig["cols"]:
+            colName = ET.SubElement(sens, "colName")
+            colName.text = sensCol["name"]
+            colName.set("method", sensCol["method"])
+            colName.set("locales", ",".join(sensCol["locales"]))
 
     ET.indent(params)
     byteXML = ET.tostring(params)

@@ -185,8 +185,8 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict):
                 sensCol["method"],
                 int(sensConfig["seed"]),
             )
-
-    xml.parse(anonConfig, sensConfig)
+    if anonConfig.get("table"):
+        xml.parse(anonConfig, sensConfig)
 
     # Stitching the Frame back to its original form
     if dropCols:
