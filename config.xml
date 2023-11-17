@@ -1,7 +1,0 @@
-<parameters>
-    <driver>org.postgresql.Driver</driver>
-    <url>jdbc:postgresql://localhost:5432/benchbase?sslmode=disable&amp;ApplicationName=templated&amp;reWriteBatchedInserts=true</url>
-    <username>admin</username>
-    <password>admin</password>
-    <jarPath>/home/enzlere/MAS/benchbase-forked/benchbase/target/benchbase-postgres/benchbase.jar</jarPath>
-</parameters>

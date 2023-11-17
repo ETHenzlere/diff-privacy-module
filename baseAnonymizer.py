@@ -196,17 +196,12 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict):
     return synthFrame
 
 
-def anonymizeDB(anonConfig: dict, sensConfig: dict):
-    with open("config.xml", "r") as f:
-        data = f.read()
-
-    xmlConfig = BeautifulSoup(data, "xml")
-
-    driver = xmlConfig.find("driver").text
-    url = xmlConfig.find("url").text
-    username = xmlConfig.find("username").text
-    password = xmlConfig.find("password").text
-    jar = xmlConfig.find("jarPath").text
+def anonymizeDB(jdbcConfig: dict, anonConfig: dict, sensConfig: dict):
+    driver = jdbcConfig["driver"]
+    url = jdbcConfig["url"]
+    username = jdbcConfig["username"]
+    password = jdbcConfig["password"]
+    jar = jdbcConfig["jarPath"]
 
     jpype.startJVM(classpath=[jar])
 
@@ -245,18 +240,21 @@ def anonymizeCSV(anonConfig, sensConfig):
 
 def main():
     """Entry method"""
-    if len(sys.argv) < 4:
-        print("Not enough arguments provided: <isCSV> <anonConfig> <sensConfig>")
+    if len(sys.argv) < 5:
+        print(
+            "Not enough arguments provided: <isCSV> <jdbcConfig> <anonConfig> <sensConfig>"
+        )
         return
 
     csvWorkload = sys.argv[1]
-    anonConfig = json.loads(sys.argv[2])
-    sensConfig = json.loads(sys.argv[3])
+    jdbcConfig = json.loads(sys.argv[2])
+    anonConfig = json.loads(sys.argv[3])
+    sensConfig = json.loads(sys.argv[4])
 
     if csvWorkload == "true":
         anonymizeCSV(anonConfig, sensConfig)
     else:
-        anonymizeDB(anonConfig, sensConfig)
+        anonymizeDB(jdbcConfig, anonConfig, sensConfig)
     return
 
 

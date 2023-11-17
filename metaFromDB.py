@@ -1,5 +1,5 @@
 import jaydebeapi
-from bs4 import BeautifulSoup
+import json
 import sys
 import jpype
 
@@ -17,19 +17,12 @@ def columnsFromTable(curs, table):
     return cols
 
 
-def getMeta(table):
-    # Reading the data inside the xml file to a variable under the name  data
-    with open("config.xml", "r") as f:
-        data = f.read()
-
-    # Passing the stored data inside the beautifulsoup parser
-    xmlConfig = BeautifulSoup(data, "xml")
-
-    driver = xmlConfig.find("driver").text
-    url = xmlConfig.find("url").text
-    username = xmlConfig.find("username").text
-    password = xmlConfig.find("password").text
-    jar = xmlConfig.find("jarPath").text
+def getMeta(table, jdbcConfig: dict):
+    driver = jdbcConfig["driver"]
+    url = jdbcConfig["url"]
+    username = jdbcConfig["username"]
+    password = jdbcConfig["password"]
+    jar = jdbcConfig["jarPath"]
 
     jpype.startJVM(classpath=[jar])
 
@@ -44,11 +37,13 @@ def getMeta(table):
 
 
 def main():
-    if len(sys.argv) < 2:
-        raise Exception("Not enough arguments provided: <tableName>")
-    name = sys.argv[1]
+    if len(sys.argv) < 3:
+        raise Exception("Not enough arguments provided: <tableName> <jdbcConfig>")
 
-    columns = getMeta(name)
+    name = sys.argv[1]
+    jdbcConfig = json.loads(sys.argv[2])
+
+    columns = getMeta(name, jdbcConfig)
 
     print(columns)
     return
