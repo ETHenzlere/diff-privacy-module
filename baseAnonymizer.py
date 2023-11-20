@@ -3,7 +3,6 @@
 import sys
 import re
 import json
-from bs4 import BeautifulSoup
 import jpype
 import jaydebeapi
 import pandas as pd
@@ -176,6 +175,11 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict):
 
     vs.generateVisu(cont, cat, ordi, dataset, synthFrame.copy(deep=True))
 
+    # Stitching the Frame back to its original form
+    if dropCols:
+        for ind, col in enumerate(dropCols):
+            synthFrame.insert(savedColumnsIndexes[ind], col, savedColumns[col])
+
     if sensConfig:
         for sensCol in sensConfig["cols"]:
             synthFrame, _ = post.fakeColumn(
@@ -187,11 +191,6 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict):
             )
     if anonConfig.get("table"):
         xml.parse(anonConfig, sensConfig)
-
-    # Stitching the Frame back to its original form
-    if dropCols:
-        for ind, col in enumerate(dropCols):
-            synthFrame.insert(savedColumnsIndexes[ind], col, savedColumns[col])
 
     return synthFrame
 
