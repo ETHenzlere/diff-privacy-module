@@ -4,6 +4,7 @@ import sys
 import re
 import json
 import jpype
+import jpype.imports
 import jaydebeapi
 import pandas as pd
 from snsynth import Synthesizer
@@ -109,7 +110,10 @@ def populateAnonFromDF(curs, df, table, timestampIndexes):
         for i, tup in enumerate(tuples):
             li = list(tup)
             for j in timestampIndexes:
-                li[j] = java.sql.Timestamp @ li[j]
+                if pd.isnull(li[j]):
+                    li[j] = None
+                else:
+                    li[j] = java.sql.Timestamp @ li[j]
             tuples[i] = tuple(li)
 
     colSlots = f"({','.join('?' for _ in df.columns)})"

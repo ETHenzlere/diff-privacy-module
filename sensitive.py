@@ -16,7 +16,10 @@ def fakeColumn(dataset, col, locales, method, seed=0):
     Returns:
         dict: Mapping from original to fake values
     """
-    fake = Faker(locales)
+    if len(locales) > 0:
+        fake = Faker(locales)
+    else:
+        fake = Faker()
 
     fake.seed_instance(seed)
 
@@ -30,14 +33,13 @@ def fakeColumn(dataset, col, locales, method, seed=0):
     except AttributeError:
         exists = False
         print("Faker method '" + method + "' not found. Resorting to random String")
-        fakerFunc = fake.unique.pystr
 
     for val in dataset[col].unique():
         if exists:
             sensDict[val] = fakerFunc()
         else:
             maxLen = len(val)
-            sensDict[val] = fakerFunc(min_chars=1, max_chars=maxLen)
+            sensDict[val] = fake.pystr(min_chars=1, max_chars=maxLen)
 
     dataset[col] = dataset[col].map(sensDict)
 
