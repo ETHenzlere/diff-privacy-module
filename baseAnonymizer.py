@@ -6,10 +6,12 @@ import json
 import jpype
 import jpype.imports
 import jaydebeapi
+import time
 import pandas as pd
 from snsynth import Synthesizer
 import numpy as np
 import visu as vs
+import preprocessing as pre
 import sensitive as post
 import xmlWriter as xml
 
@@ -158,7 +160,7 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict):
 
     synth = Synthesizer.create(alg, epsilon=eps, verbose=True)
     synthFrame = pd.DataFrame()
-
+    startTime = time.perf_counter()
     if len(cat) == 0 and len(cont) == 0 and len(ordi) == 0:
         sample = synth.fit_sample(
             dataset,
@@ -173,9 +175,12 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict):
             categorical_columns=cat,
             continuous_columns=cont,
             ordinal_columns=ordi,
+            #transformer=pre.getTransformer(dataset),
             nullable=nullableFlag,
         )
         synthFrame = pd.DataFrame(sample)
+    endTime=time.perf_counter()
+    print(f"{(endTime-startTime):0.4f}")
 
     vs.generateVisu(cont, cat, ordi, dataset, synthFrame.copy(deep=True))
 

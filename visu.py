@@ -124,12 +124,8 @@ def correlationMap(orig, anon):
 
 
 def generateVisu(continuous, categorical, ordinal, dataset, synthFrame):
-    if len(continuous) == 0 and len(categorical) == 0:
-        continuous = list(dataset.select_dtypes(include=[np.number]))
-        categorical = list(dataset.select_dtypes(exclude=[np.number]))
-
-    else:
-        categorical += ordinal
+    continuous = list(dataset.select_dtypes(include=[np.number]))
+    categorical = list(dataset.select_dtypes(exclude=[np.number]))
 
     compareCategorical(dataset, synthFrame, categorical)
     compareNumericalCols(dataset, synthFrame, continuous)
