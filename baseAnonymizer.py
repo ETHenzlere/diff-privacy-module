@@ -141,7 +141,7 @@ def getDroppableInfo(dropCols, dataset):
     return savedColumns, savedColumnsIndexes
 
 
-def anonymize(dataset: str, anonConfig: dict, sensConfig: dict):
+def anonymize(dataset: str, anonConfig: dict, sensConfig: dict, contConfig: dict):
     dropCols = anonConfig["hide"]
     alg = anonConfig["alg"]
     eps = float(anonConfig["eps"])
@@ -161,10 +161,14 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict):
     synth = Synthesizer.create(alg, epsilon=eps, verbose=True)
     synthFrame = pd.DataFrame()
     startTime = time.perf_counter()
-    if len(cat) == 0 and len(cont) == 0 and len(ordi) == 0:
+    if contConfig:
         sample = synth.fit_sample(
             dataset,
             preprocessor_eps=preEps,
+            categorical_columns=cat,
+            continuous_columns=cont,
+            ordinal_columns=ordi,
+            transformer=pre.getTransformer(dataset,alg,cat,cont,ordi,contConfig),
             nullable=nullableFlag,
         )
         synthFrame = pd.DataFrame(sample)
@@ -175,12 +179,12 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict):
             categorical_columns=cat,
             continuous_columns=cont,
             ordinal_columns=ordi,
-            #transformer=pre.getTransformer(dataset),
             nullable=nullableFlag,
         )
         synthFrame = pd.DataFrame(sample)
+
     endTime=time.perf_counter()
-    print(f"{(endTime-startTime):0.4f}")
+    print(f"Process took: {(endTime-startTime):0.2f} seconds")
 
     vs.generateVisu(cont, cat, ordi, dataset, synthFrame.copy(deep=True))
 
@@ -204,7 +208,7 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict):
     return synthFrame
 
 
-def anonymizeDB(jdbcConfig: dict, anonConfig: dict, sensConfig: dict):
+def anonymizeDB(jdbcConfig: dict, anonConfig: dict, sensConfig: dict | None, contConfig: dict | None):
     driver = jdbcConfig["driver"]
     url = jdbcConfig["url"]
     username = jdbcConfig["username"]
@@ -219,7 +223,7 @@ def anonymizeDB(jdbcConfig: dict, anonConfig: dict, sensConfig: dict):
     table = anonConfig["table"]
     dataset, timestampIndexes = dfFromTable(curs, table)
 
-    datasetAnon = anonymize(dataset, anonConfig, sensConfig)
+    datasetAnon = anonymize(dataset, anonConfig, sensConfig,contConfig)
 
     # Create empty table called ANON
     anonTableName = table + "_anonymized"
@@ -233,12 +237,12 @@ def anonymizeDB(jdbcConfig: dict, anonConfig: dict, sensConfig: dict):
     conn.close()
 
 
-def anonymizeCSV(anonConfig, sensConfig):
+def anonymizeCSV(anonConfig:dict, sensConfig:dict | None,contConfig: dict | None):
     csvPath = anonConfig["path"]
 
     dataset = pd.read_csv(csvPath, index_col=None)
     originalTypes = dataset.dtypes
-    datasetAnon = anonymize(dataset, anonConfig, sensConfig)
+    datasetAnon = anonymize(dataset, anonConfig, sensConfig,contConfig)
     datasetAnon = datasetAnon.astype(originalTypes)
 
     baseLoc = storageLocation(csvPath)
@@ -248,9 +252,9 @@ def anonymizeCSV(anonConfig, sensConfig):
 
 def main():
     """Entry method"""
-    if len(sys.argv) < 5:
+    if len(sys.argv) < 6:
         print(
-            "Not enough arguments provided: <isCSV> <jdbcConfig> <anonConfig> <sensConfig>"
+            "Not enough arguments provided: <isCSV> <jdbcConfig> <anonConfig> <sensConfig> <contConfig>"
         )
         return
 
@@ -258,11 +262,12 @@ def main():
     jdbcConfig = json.loads(sys.argv[2])
     anonConfig = json.loads(sys.argv[3])
     sensConfig = json.loads(sys.argv[4])
+    contConfig = json.loads(sys.argv[5])
 
     if csvWorkload == "true":
-        anonymizeCSV(anonConfig, sensConfig)
+        anonymizeCSV(anonConfig, sensConfig, contConfig)
     else:
-        anonymizeDB(jdbcConfig, anonConfig, sensConfig)
+        anonymizeDB(jdbcConfig, anonConfig, sensConfig, contConfig)
     return
 
 
