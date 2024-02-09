@@ -69,21 +69,23 @@ def compareCategorical(dataset, synthFrame, categorical):
     jsonDict = []
 
     for col in categorical:
-        catOrig = dataset[col].value_counts().reset_index()
-        catAnon = synthFrame[col].value_counts().reset_index()
+        if( dataset[col].count() / dataset[col].nunique() > 10):
+            catOrig = dataset[col].value_counts().reset_index()
+            catAnon = synthFrame[col].value_counts().reset_index()
 
-        catOrig.columns = [col, "original"]
-        catAnon.columns = [col, "anonymized"]
+            catOrig.columns = [col, "original"]
+            catAnon.columns = [col, "anonymized"]
 
-        combined = catOrig.merge(catAnon, how="left", on=col)
-        combined[col] = combined[col].astype(str)
-        jsonObj = {
-            "column": col,
-            "distinct": list(combined[col]),
-            "original": list(combined["original"]),
-            "anonymized": list(combined["anonymized"]),
-        }
-        jsonDict.append(jsonObj)
+            combined = catOrig.merge(catAnon, how="left", on=col)
+            combined.fillna(0)
+            combined[col] = combined[col].astype(str)
+            jsonObj = {
+                "column": col,
+                "distinct": list(combined[col]),
+                "original": list(combined["original"]),
+                "anonymized": list(combined["anonymized"]),
+            }
+            jsonDict.append(jsonObj)
     with open("output/catInfo.json", "w", encoding="utf-8") as outfile:
         json.dump(jsonDict, outfile)
 
@@ -123,7 +125,7 @@ def correlationMap(orig, anon):
     plt.close()
 
 
-def generateVisu(continuous, categorical, ordinal, dataset, synthFrame):
+def generateVisu(dataset, synthFrame):
     continuous = list(dataset.select_dtypes(include=[np.number]))
     categorical = list(dataset.select_dtypes(exclude=[np.number]))
 

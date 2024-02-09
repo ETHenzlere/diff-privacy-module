@@ -158,7 +158,7 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict, contConfig: dict
 
     nullableFlag = dataset.isnull().values.any()
 
-    synth = Synthesizer.create(alg, epsilon=eps, verbose=True)
+    synth = Synthesizer.create(alg, epsilon=eps,verbose=True)
     synthFrame = pd.DataFrame()
     startTime = time.perf_counter()
     if contConfig:
@@ -186,7 +186,7 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict, contConfig: dict
     endTime=time.perf_counter()
     print(f"Process took: {(endTime-startTime):0.2f} seconds")
 
-    vs.generateVisu(cont, cat, ordi, dataset, synthFrame.copy(deep=True))
+    vs.generateVisu(dataset, synthFrame.copy(deep=True))
 
     # Stitching the Frame back to its original form
     if dropCols:
