@@ -1,5 +1,6 @@
 """Module that handles the full Anonymization pipeline
 """
+
 import sys
 import re
 import json
@@ -158,7 +159,7 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict, contConfig: dict
 
     nullableFlag = dataset.isnull().values.any()
 
-    synth = Synthesizer.create(alg, epsilon=eps,verbose=True)
+    synth = Synthesizer.create(alg, epsilon=eps, verbose=True)
     synthFrame = pd.DataFrame()
     startTime = time.perf_counter()
     if contConfig:
@@ -168,7 +169,7 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict, contConfig: dict
             categorical_columns=cat,
             continuous_columns=cont,
             ordinal_columns=ordi,
-            transformer=pre.getTransformer(dataset,alg,cat,cont,ordi,contConfig),
+            transformer=pre.getTransformer(dataset, alg, cat, cont, ordi, contConfig),
             nullable=nullableFlag,
         )
         synthFrame = pd.DataFrame(sample)
@@ -183,7 +184,7 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict, contConfig: dict
         )
         synthFrame = pd.DataFrame(sample)
 
-    endTime=time.perf_counter()
+    endTime = time.perf_counter()
     print(f"Process took: {(endTime-startTime):0.2f} seconds")
 
     vs.generateVisu(dataset, synthFrame.copy(deep=True))
@@ -203,12 +204,14 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict, contConfig: dict
                 int(sensConfig["seed"]),
             )
     if anonConfig.get("table"):
-        xml.parse(anonConfig, sensConfig)
+        xml.parse(anonConfig, sensConfig, contConfig)
 
     return synthFrame
 
 
-def anonymizeDB(jdbcConfig: dict, anonConfig: dict, sensConfig: dict | None, contConfig: dict | None):
+def anonymizeDB(
+    jdbcConfig: dict, anonConfig: dict, sensConfig: dict | None, contConfig: dict | None
+):
     driver = jdbcConfig["driver"]
     url = jdbcConfig["url"]
     username = jdbcConfig["username"]
@@ -223,7 +226,7 @@ def anonymizeDB(jdbcConfig: dict, anonConfig: dict, sensConfig: dict | None, con
     table = anonConfig["table"]
     dataset, timestampIndexes = dfFromTable(curs, table)
 
-    datasetAnon = anonymize(dataset, anonConfig, sensConfig,contConfig)
+    datasetAnon = anonymize(dataset, anonConfig, sensConfig, contConfig)
 
     # Create empty table called ANON
     anonTableName = table + "_anonymized"
@@ -237,12 +240,12 @@ def anonymizeDB(jdbcConfig: dict, anonConfig: dict, sensConfig: dict | None, con
     conn.close()
 
 
-def anonymizeCSV(anonConfig:dict, sensConfig:dict | None,contConfig: dict | None):
+def anonymizeCSV(anonConfig: dict, sensConfig: dict | None, contConfig: dict | None):
     csvPath = anonConfig["path"]
 
     dataset = pd.read_csv(csvPath, index_col=None)
     originalTypes = dataset.dtypes
-    datasetAnon = anonymize(dataset, anonConfig, sensConfig,contConfig)
+    datasetAnon = anonymize(dataset, anonConfig, sensConfig, contConfig)
     datasetAnon = datasetAnon.astype(originalTypes)
 
     baseLoc = storageLocation(csvPath)
