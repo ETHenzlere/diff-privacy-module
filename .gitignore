@@ -1,4 +1,4 @@
-__pycache__/
+*__pycache__
 output/*.json
 output/*.xml
 output/*.png
