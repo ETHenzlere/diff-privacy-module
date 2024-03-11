@@ -29,7 +29,7 @@ def getTimestampColumns(dbTypeList):
     timestampIndexes = []
     for i, entry in enumerate(dbTypeList):
         for dType in entry.values:
-            if dType == "TIMESTAMP":
+            if dType == "TIMESTAMP" or dType == "DATE" or dType == "TIME":
                 timestampIndexes.append(i)
     return timestampIndexes
 
@@ -103,7 +103,7 @@ def populateAnonFromDF(curs, df, table, timestampIndexes):
 
     for ind in timestampIndexes:
         name = df.columns[ind]
-        df[name] = pd.to_datetime(df[name])
+        df[name] = pd.to_datetime(df[name], format="ISO8601")
 
     tuples = [tuple(x) for x in df.values]
 
@@ -187,13 +187,15 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict, contConfig: dict
     endTime = time.perf_counter()
     print(f"Process took: {(endTime-startTime):0.2f} seconds")
 
-    vs.generateVisu(dataset, synthFrame.copy(deep=True))
+    try:
+        vs.generateVisu(dataset, synthFrame.copy(deep=True))
+    except:
+        print("An exception occurred while trying to visualize")
 
     # Stitching the Frame back to its original form
     if dropCols:
         for ind, col in enumerate(dropCols):
             synthFrame.insert(savedColumnsIndexes[ind], col, savedColumns[col])
-
     if sensConfig:
         for sensCol in sensConfig["cols"]:
             synthFrame, _ = post.fakeColumn(
@@ -203,8 +205,12 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict, contConfig: dict
                 sensCol["method"],
                 int(sensConfig["seed"]),
             )
-    if anonConfig.get("table"):
-        xml.parse(anonConfig, sensConfig, contConfig)
+
+    try:
+        if anonConfig.get("table"):
+            xml.parse(anonConfig, sensConfig, contConfig)
+    except:
+        print("An exception occurred while trying to parse the XML config")
 
     return synthFrame
 

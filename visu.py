@@ -92,11 +92,11 @@ def compareCategorical(dataset, synthFrame, categorical):
 
 def correlationMap(orig, anon):
     # Make plot
-    sns.set(font_scale=1.5)
-    fig, axes = plt.subplots(1, 2, figsize=(24, (12)))
+    sns.set(font_scale=2.0)
+    fig, axes = plt.subplots(1, 2, figsize=(24, 12))
 
     # Annot = True for annotation
-    axes[0].set_title("Original")
+    axes[0].set_title("Original",weight='bold')
     sns.heatmap(
         orig,
         annot=False,
@@ -108,7 +108,7 @@ def correlationMap(orig, anon):
         linewidths=0.5,
         ax=axes[0],
     )
-    axes[1].set_title("Anonymized")
+    axes[1].set_title("Anonymized",weight='bold')
     sns.heatmap(
         anon,
         annot=False,
@@ -122,6 +122,7 @@ def correlationMap(orig, anon):
     )
     plt.tight_layout()
     fig.savefig("output/corrMap.png")
+    fig.savefig("output/corrMap.pdf")
     plt.close()
 
 

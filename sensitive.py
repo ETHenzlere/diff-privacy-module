@@ -1,9 +1,10 @@
 """A Helper module handling the faking of sensitive columns
 """
+
 from faker import Faker
 
 
-def fakeColumn(dataset, col, locales, method, seed=0):
+def fakeColumn(dataset, col:str, locales:list, method:str, seed=0):
     """Method that generates fake values for columns that are considered sensitive
 
     Args:
