@@ -197,14 +197,7 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict, contConfig: dict
         for ind, col in enumerate(dropCols):
             synthFrame.insert(savedColumnsIndexes[ind], col, savedColumns[col])
     if sensConfig:
-        for sensCol in sensConfig["cols"]:
-            synthFrame, _ = post.fakeColumn(
-                synthFrame,
-                sensCol["name"],
-                sensCol["locales"],
-                sensCol["method"],
-                int(sensConfig["seed"]),
-            )
+        post.fakeDataset(synthFrame,sensConfig)
 
     try:
         if anonConfig.get("table"):
@@ -246,37 +239,20 @@ def anonymizeDB(
     conn.close()
 
 
-def anonymizeCSV(anonConfig: dict, sensConfig: dict | None, contConfig: dict | None):
-    csvPath = anonConfig["path"]
-
-    dataset = pd.read_csv(csvPath, index_col=None)
-    originalTypes = dataset.dtypes
-    datasetAnon = anonymize(dataset, anonConfig, sensConfig, contConfig)
-    datasetAnon = datasetAnon.astype(originalTypes)
-
-    baseLoc = storageLocation(csvPath)
-    baseLoc += "/DPOut.csv"
-    datasetAnon.to_csv(baseLoc, index=False)
-
-
 def main():
     """Entry method"""
-    if len(sys.argv) < 6:
+    if len(sys.argv) < 5:
         print(
-            "Not enough arguments provided: <isCSV> <jdbcConfig> <anonConfig> <sensConfig> <contConfig>"
+            "Not enough arguments provided: <jdbcConfig> <anonConfig> <sensConfig> <contConfig>"
         )
         return
 
-    csvWorkload = sys.argv[1]
-    jdbcConfig = json.loads(sys.argv[2])
-    anonConfig = json.loads(sys.argv[3])
-    sensConfig = json.loads(sys.argv[4])
-    contConfig = json.loads(sys.argv[5])
+    jdbcConfig = json.loads(sys.argv[1])
+    anonConfig = json.loads(sys.argv[2])
+    sensConfig = json.loads(sys.argv[3])
+    contConfig = json.loads(sys.argv[4])
 
-    if csvWorkload == "true":
-        anonymizeCSV(anonConfig, sensConfig, contConfig)
-    else:
-        anonymizeDB(jdbcConfig, anonConfig, sensConfig, contConfig)
+    anonymizeDB(jdbcConfig, anonConfig, sensConfig, contConfig)
     return
 
 
