@@ -64,7 +64,7 @@ def fakeColumn(dataset, col: str, method: str, mode: str, locales: list, seed=0)
             else:
                 fakeString = fake.unique.pystr(
                     min_chars=minValueLength, max_chars=maxValueLength
-                )  # Allow at least 52*52*52 values
+                ) 
                 if mode == "fitting":
                     sensDict[val] = fakeString
                 else:

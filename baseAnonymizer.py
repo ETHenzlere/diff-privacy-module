@@ -103,7 +103,7 @@ def populateAnonFromDF(curs, df, table, timestampIndexes):
 
     for ind in timestampIndexes:
         name = df.columns[ind]
-        df[name] = pd.to_datetime(df[name], format="ISO8601")
+        df[name] = pd.to_datetime(df[name], format="mixed")
 
     tuples = [tuple(x) for x in df.values]
 
@@ -159,33 +159,40 @@ def anonymize(dataset: str, anonConfig: dict, sensConfig: dict, contConfig: dict
 
     nullableFlag = dataset.isnull().values.any()
 
-    synth = Synthesizer.create(alg, epsilon=eps, verbose=True)
+    
     synthFrame = pd.DataFrame()
-    startTime = time.perf_counter()
-    if contConfig:
-        sample = synth.fit_sample(
-            dataset,
-            preprocessor_eps=preEps,
-            categorical_columns=cat,
-            continuous_columns=cont,
-            ordinal_columns=ordi,
-            transformer=pre.getTransformer(dataset, alg, cat, cont, ordi, contConfig),
-            nullable=nullableFlag,
-        )
-        synthFrame = pd.DataFrame(sample)
-    else:
-        sample = synth.fit_sample(
-            dataset,
-            preprocessor_eps=preEps,
-            categorical_columns=cat,
-            continuous_columns=cont,
-            ordinal_columns=ordi,
-            nullable=nullableFlag,
-        )
-        synthFrame = pd.DataFrame(sample)
 
-    endTime = time.perf_counter()
-    print(f"Process took: {(endTime-startTime):0.2f} seconds")
+    if(eps > 0):
+        synth = Synthesizer.create(alg, epsilon=eps, verbose=True)
+        startTime = time.perf_counter()
+        if contConfig:
+            sample = synth.fit_sample(
+                dataset,
+                preprocessor_eps=preEps,
+                categorical_columns=cat,
+                continuous_columns=cont,
+                ordinal_columns=ordi,
+                transformer=pre.getTransformer(dataset, alg, cat, cont, ordi, contConfig),
+                nullable=nullableFlag,
+            )
+            synthFrame = pd.DataFrame(sample)
+        else:
+            sample = synth.fit_sample(
+                dataset,
+                preprocessor_eps=preEps,
+                categorical_columns=cat,
+                continuous_columns=cont,
+                ordinal_columns=ordi,
+                nullable=nullableFlag,
+            )
+            synthFrame = pd.DataFrame(sample)
+
+        endTime = time.perf_counter()
+        print(f"Process took: {(endTime-startTime):0.2f} seconds")
+
+    else:
+        print("Epsilon = 0. Anonymization will return the original data")
+        synthFrame = dataset
 
     try:
         vs.generateVisu(dataset, synthFrame.copy(deep=True))
