@@ -34,7 +34,7 @@ def compareNumericalCols(dataset, synthFrame, continuous):
             jsonDict.append(jsonObj)
             plt.clf()
 
-    with open("../../output/kdeInfo.json", "w", encoding="utf-8") as outfile:
+    with open("../output/kdeInfo.json", "w", encoding="utf-8") as outfile:
         json.dump(jsonDict, outfile)
 
     boxNumerical(dataset, synthFrame, continuous)
@@ -61,7 +61,7 @@ def boxNumerical(dataset, synthFrame, continuous):
                 )
             jsonObj = {"column": column, "data": celltext}
             jsonDict.append(jsonObj)
-    with open("../../output/numInfo.json", "w", encoding="utf-8") as outfile:
+    with open("../output/numInfo.json", "w", encoding="utf-8") as outfile:
         json.dump(jsonDict, outfile)
 
 
@@ -86,7 +86,7 @@ def compareCategorical(dataset, synthFrame, categorical):
                 "anonymized": list(combined["anonymized"]),
             }
             jsonDict.append(jsonObj)
-    with open("../../output/catInfo.json", "w", encoding="utf-8") as outfile:
+    with open("../output/catInfo.json", "w", encoding="utf-8") as outfile:
         json.dump(jsonDict, outfile)
 
 
@@ -121,8 +121,8 @@ def correlationMap(orig, anon):
         ax=axes[1],
     )
     plt.tight_layout()
-    fig.savefig("../../output/corrMap.png")
-    fig.savefig("../../output/corrMap.pdf")
+    fig.savefig("../output/corrMap.png")
+    fig.savefig("../output/corrMap.pdf")
     plt.close()
 
 

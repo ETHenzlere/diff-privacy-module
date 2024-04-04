@@ -20,7 +20,6 @@ class SensitiveAnonymizer:
                     anon_data, col.name, col.method, col.mode, col.locales, col.seed
                 )
                 list_of_mappings.append(mapping)
-                # TODO: Use list of mappings to change templates file
         return anon_data
 
     def __fake_column(
