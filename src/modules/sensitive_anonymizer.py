@@ -1,17 +1,31 @@
+"""Module that handles the anonymization of sensitive value
+"""
 import pandas as pd
+from faker import Faker
 
 from configuration.configurations import SensitiveConfig
-from faker import Faker
+
 
 
 class SensitiveAnonymizer:
     def __init__(
         self, dataset: pd.DataFrame, sens_config: SensitiveConfig
     ):
+        """Class that handles all things related to sensitive column handling
+
+        Args:
+            dataset (pd.DataFrame): The private dataset
+            sens_config (SensitiveConfig): The sensitive data configuration
+        """
         self.dataset = dataset
         self.sens_config = sens_config
 
     def run_anonymization(self):
+        """Method that starts the anonymization of sensitive values
+
+        Returns:
+            pd.DataFrame: Anonymized data
+        """
         anon_data = self.dataset.copy()
         list_of_mappings = []
         if self.sens_config:

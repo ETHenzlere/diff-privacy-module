@@ -40,13 +40,13 @@ def anonymize(
 
     try:
         vs.generateVisu(dataset, dp_data.copy(deep=True))
-    except:
+    except Exception: # pylint: disable=broad-exception-caught
         print("An exception occurred while trying to visualize the output.")
 
     return dp_data
 
 
-def anonymizeDB(
+def anonymize_db(
     jdbc_handler: JDBCHandler,
     anon_config: DPConfig,
     sens_config: SensitiveConfig,
@@ -95,7 +95,7 @@ def main():
     sens_config = config_parser.get_sens_config()
     cont_config = config_parser.get_cont_config()
 
-    anonymizeDB(jdbc_handler, anon_config, sens_config, cont_config)
+    anonymize_db(jdbc_handler, anon_config, sens_config, cont_config)
     return
 
 

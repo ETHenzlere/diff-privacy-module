@@ -1,11 +1,26 @@
+"""A module that handles all differential privacy related things
+"""
 import time
 from snsynth import Synthesizer
-from configuration.configurations import DPConfig, ContinuousConfig
 import pandas as pd
+from configuration.configurations import DPConfig, ContinuousConfig
 from modules.preprocessor import Preprocessor
 
 
 class DifferentialPrivacyAnonymizer:
+    """
+    A class to represent a DP Anonymizer
+
+    Attributes
+    ----------
+    dataset : pd.DataFrame
+        The private data
+    anon_config : DPConfig
+        The configuration options
+    cont_config : ContinuousConfig
+        The configuration options for continuous columns
+    
+    """
     def __init__(
         self,
         dataset: pd.DataFrame,
@@ -17,6 +32,11 @@ class DifferentialPrivacyAnonymizer:
         self.cont_config = cont_config
 
     def run_anonymization(self):
+        """Method that starts the anonymization process
+
+        Returns:
+            pd.DataFrame: Differentially private data
+        """
 
         alg = self.anon_config.algorithm
         eps = float(self.anon_config.epsilon)
@@ -34,7 +54,7 @@ class DifferentialPrivacyAnonymizer:
         if eps > 0:
             # For epsilon > 0 we run the anonymization
             synth = Synthesizer.create(alg, epsilon=eps, verbose=True)
-            startTime = time.perf_counter()
+            start_time = time.perf_counter()
 
             # If there is a preprocessing configuration for continuous columns, we need the Preprocessor
             if self.cont_config:
@@ -44,7 +64,7 @@ class DifferentialPrivacyAnonymizer:
                     categorical_columns=cat,
                     continuous_columns=cont,
                     ordinal_columns=ordi,
-                    transformer=Preprocessor(self.anon_config).getTransformer(
+                    transformer=Preprocessor(self.anon_config).get_transformer(
                         self.dataset, self.cont_config
                     ),
                     nullable=nullable_flag,
@@ -61,8 +81,8 @@ class DifferentialPrivacyAnonymizer:
                 )
                 anon_data = pd.DataFrame(sample)
 
-            endTime = time.perf_counter()
-            print(f"Process took: {(endTime-startTime):0.2f} seconds")
+            end_time = time.perf_counter()
+            print(f"Process took: {(end_time-start_time):0.2f} seconds")
 
         else:
             print("Epsilon = 0. Anonymization will return the original data")

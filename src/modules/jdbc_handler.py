@@ -1,3 +1,5 @@
+"""A module that handles all things related to JDBC
+"""
 import jpype
 import jpype.imports
 import jaydebeapi
